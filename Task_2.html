@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Doggo Gallery</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: sans-serif;
+        }
+        h1 {
+            color: coral;
+        }
+        .grid-container {
+            columns: 5 200px;
+            column-gap: 1.5rem;
+            width: 90%;
+            margin: 0 auto;
+        }
+        .grid-item {
+            width: 150px;
+            margin: 0 1.5rem 1.5rem 0;
+            display: inline-block;
+            border: solid 2px black;
+            padding: 5px;
+            box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
+            border-radius: 5px;
+            transition: all .25s ease-in-out;
+        }
+        .grid-item:hover img {
+            filter: grayscale(0);
+        }
+        .grid-item:hover {
+            border-color: coral;
+        }
+        img {
+            width: 100%;
+            filter: grayscale(100%);
+            border-radius: 5px;
+            transition: all .25s ease-in-out;
+        }
+        p {
+            margin: 5px 0;
+            padding: 0;
+            text-align: center;
+            font-style: italic;
+        }
+        form {
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>The Purest of Doggos</h1>
+    
+    <form id="imageForm">
+        <input type="text" id="imageUrl" placeholder="Image URL" required>
+        <input type="text" id="imageCaption" placeholder="Image Caption" required>
+        <button type="submit">Add Image</button>
+    </form>
+
+    <div class="grid-container" id="gallery">
+        <!-- Existing images will be added here dynamically -->
+    </div>
+
+    <script>
+        const gallery = document.getElementById('gallery');
+        const imageForm = document.getElementById('imageForm');
+
+        // Existing images
+        const images = [
+            {
+                src: 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=400&fit=max&ixid=eyJhcHBfaWQiOjE0NTg5fQ',
+                caption: "I'm so happy today!"
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=400&fit=max&ixid=eyJhcHBfaWQiOjE0NTg5fQ',
+                caption: "I see those nugs."
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1504595403659-9088ce801e29?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=400&fit=max&ixid=eyJhcHBfaWQiOjE0NTg5fQ',
+                caption: "Dis my fren!"
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=400&fit=max&ixid=eyJhcHBfaWQiOjE0NTg5fQ',
+                caption: "A rose for mommy!"
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=400&fit=max&ixid=eyJhcHBfaWQiOjE0NTg5fQ',
+                caption: "A rose for mommy!"
+            },
+        ];
+
+        // Function to display images
+        function displayImages() {
+            gallery.innerHTML = '';
+            images.forEach(image => {
+                const div = document.createElement('div');
+                div.className = 'grid-item';
+                div.innerHTML = `<img src="${image.src}" alt=""><p>${image.caption}</p>`;
+                gallery.appendChild(div);
+            });
+        }
+
+        // Form submission event
+        imageForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const imageUrl = document.getElementById('imageUrl').value;
+            const imageCaption = document.getElementById('imageCaption').value;
+
+            // Validate URL
+            const urlPattern = /\.(jpeg|jpg|gif|png|bmp|webp)$/i; // Check for image file extensions
+            if (!urlPattern.test(imageUrl)) {
+                alert('Please enter a valid image URL ending with .jpeg, .jpg, .gif, .png, .bmp, or .webp.');
+                return;
+            }
+
+            // Check if the URL already exists
+            const urlExists = images.some(image => image.src === imageUrl);
+            if (urlExists) {
+                alert('This image URL already exists in the gallery.');
+                return;
+            }
+
+            // Validate caption
+            if (imageCaption.trim() === '') {
+                alert('Please enter a caption for the image.');
+                return;
+            }
+
+            // Add new image to the array
+            images.push({ src: imageUrl, caption: imageCaption });
+            displayImages();
+
+            // Clear the form
+            imageForm.reset();
+        });
+
+        // Initial display of images
+        displayImages();
+    </script>
+</body>
+</html>
