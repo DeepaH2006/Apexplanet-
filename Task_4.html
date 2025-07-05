@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Advanced To-Do List</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h3 {
+      text-align: center;
+    }
+    .form-group, .summary, .aptitude, .iq-section {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    input, select, button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f9f9f9;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    li.completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+    .score {
+      font-weight: bold;
+      color: green;
+    }
+    .reset-btn {
+      background-color: #f39c12;
+    }
+    .delete-btn {
+      background-color: #e74c3c;
+    }
+    .toggle-btn {
+      background-color: #2ecc71;
+    }
+    .aptitude, .iq-section {
+      background-color: #f0f0f0;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 12px;
+      flex-direction: column;
+    }
+    .congrats {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      display: none;
+      text-align: center;
+    }
+    .question-block {
+      margin-bottom: 10px;
+    }
+    .iq-feedback {
+      margin-top: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌟 Super Advanced To-Do List</h1>
+
+    <div class="form-group">
+      <input type="text" id="taskInput" placeholder="Enter your task" />
+      <input type="date" id="dueDate" />
+      <select id="category">
+        <option value="">Category</option>
+        <option value="Work">💼 Work</option>
+        <option value="Personal">🏡 Personal</option>
+        <option value="Urgent">⚠️ Urgent</option>
+      </select>
+      <button onclick="addTask()">Add</button>
+    </div>
+
+    <div class="summary">
+      <div>🎯 Score: <span id="score">0</span></div>
+      <div>✅ Completed: <span id="done">0</span></div>
+      <div>🕓 Pending: <span id="pending">0</span></div>
+      <button class="reset-btn" onclick="resetAll()">Reset</button>
+    </div>
+
+    <ul id="taskList"></ul>
+
+    <div class="congrats" id="congratsMessage">🎉 Congrats! You completed a task!</div>
+
+    <div class="aptitude">
+      <h3>🧠 Daily Aptitude Challenge</h3>
+      <p id="aptitudeQuestion"></p>
+      <input type="text" id="aptitudeAnswer" placeholder="Your Answer" />
+      <button onclick="checkAptitude()">Submit</button>
+      <div id="aptitudeResult"></div>
+    </div>
+
+    <div class="iq-section">
+      <h3>🧩 Daily IQ Puzzles</h3>
+      <div id="iqContainer"></div>
+      <div>🔥 Streak: <span id="iqStreak">0</span> days</div>
+    </div>
+  </div>
+
+  <script>
+    const iqPuzzles = [
+      {
+        question: "What comes next in the series: 3, 6, 9, 12, ?",
+        options: ["13", "15", "14", "18"],
+        answer: "15",
+        explanation: "The series increases by 3 each time."
+      },
+      {
+        question: "Which one is the odd one out: Apple, Orange, Banana, Carrot?",
+        options: ["Apple", "Orange", "Banana", "Carrot"],
+        answer: "Carrot",
+        explanation: "Carrot is a vegetable; the rest are fruits."
+      },
+      {
+        question: "Which number replaces the question mark: 2, 4, 8, 16, ?",
+        options: ["18", "24", "32", "64"],
+        answer: "32",
+        explanation: "Each number is multiplied by 2."
+      },
+      {
+        question: "If 1=5, 2=25, 3=325, what is 4=?",
+        options: ["4325", "425", "432", "None"],
+        answer: "4325",
+        explanation: "Pattern is n followed by 25."
+      },
+      {
+        question: "Which word does NOT belong: Cat, Dog, Tiger, Lion",
+        options: ["Cat", "Dog", "Tiger", "Lion"],
+        answer: "Dog",
+        explanation: "Dog is a domestic animal; the rest are wild cats."
+      }
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      Notification.requestPermission();
+      renderTasks();
+      updateSummary();
+      loadAptitude();
+      loadIQPuzzles();
+      setInterval(checkReminders, 60000);
+    });
+
+    function loadIQPuzzles() {
+      const today = new Date().toISOString().split("T")[0];
+      const lastIQDate = localStorage.getItem("iqDate");
+
+      if (lastIQDate === today) {
+        document.getElementById("iqContainer").innerHTML = "✅ You've completed today's IQ puzzles!";
+        return;
+      }
+
+      const shuffled = iqPuzzles.sort(() => 0.5 - Math.random()).slice(0, 2);
+      localStorage.setItem("iqPuzzlesToday", JSON.stringify(shuffled));
+      localStorage.setItem("iqDate", today);
+      localStorage.setItem("iqCorrect", "0");
+
+      const container = document.getElementById("iqContainer");
+      container.innerHTML = "";
+      shuffled.forEach((puzzle, index) => {
+        const div = document.createElement("div");
+        div.className = "question-block";
+        div.innerHTML = `
+          <p><b>Q${index + 1}: ${puzzle.question}</b></p>
+          ${puzzle.options.map(opt => `
+            <label><input type='radio' name='q${index}' value='${opt}'/> ${opt}</label><br/>
+          `).join("")}
+          <button onclick="submitIQ(${index})">Submit</button>
+          <div class='iq-feedback' id='iqFeedback${index}'></div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function submitIQ(index) {
+      const puzzles = JSON.parse(localStorage.getItem("iqPuzzlesToday"));
+      const radios = document.getElementsByName(`q${index}`);
+      let selected = "";
+      for (let r of radios) if (r.checked) selected = r.value;
+      if (!selected) return alert("Please select an answer.");
+
+      const correct = puzzles[index].answer;
+      const feedback = document.getElementById(`iqFeedback${index}`);
+      if (selected === correct) {
+        feedback.textContent = `✅ Correct! +15 points. Hint: ${puzzles[index].explanation}`;
+        feedback.style.color = "green";
+        let count = parseInt(localStorage.getItem("iqCorrect")) + 1;
+        localStorage.setItem("iqCorrect", count);
+        setScore(getScore() + 15);
+      } else {
+        feedback.textContent = `❌ Wrong. ${puzzles[index].explanation}`;
+        feedback.style.color = "red";
+      }
+
+      for (let r of radios) r.disabled = true;
+      document.querySelectorAll(`button[onclick='submitIQ(${index})']`)[0].disabled = true;
+
+      const totalAnswered = document.querySelectorAll(".iq-feedback").length;
+      const completed = [...document.querySelectorAll(".iq-feedback")].filter(f => f.textContent).length;
+      if (completed === totalAnswered) {
+        const correctToday = parseInt(localStorage.getItem("iqCorrect"));
+        let streak = parseInt(localStorage.getItem("iqStreak") || "0");
+        if (correctToday > 0) streak += 1;
+        else streak = 0;
+        localStorage.setItem("iqStreak", streak);
+        document.getElementById("iqStreak").textContent = streak;
+      }
+    }
+
+    function getTasks() {
+      return JSON.parse(localStorage.getItem("tasks") || "[]");
+    }
+
+    function saveTasks(tasks) {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function getScore() {
+      return parseInt(localStorage.getItem("score") || "0");
+    }
+
+    function setScore(score) {
+      localStorage.setItem("score", score);
+      document.getElementById("score").textContent = score;
+    }
+
+    function addTask() {
+      const text = document.getElementById("taskInput").value.trim();
+      const due = document.getElementById("dueDate").value;
+      const category = document.getElementById("category").value;
+
+      if (!text) {
+        alert("Please enter a task.");
+        return;
+      }
+
+      const tasks = getTasks();
+
+      tasks.push({
+        id: Date.now(),
+        text: text,
+        due: due,
+        category: category,
+        completed: false
+      });
+
+      saveTasks(tasks);
+
+      document.getElementById("taskInput").value = "";
+      document.getElementById("dueDate").value = "";
+      document.getElementById("category").value = "";
+
+      renderTasks();
+      updateSummary();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById("taskList");
+      const tasks = getTasks();
+      list.innerHTML = "";
+
+      tasks.forEach(task => {
+        const li = document.createElement("li");
+        li.className = task.completed ? "completed" : "";
+        li.innerHTML = `
+          <span>
+            ${task.category ? `(${task.category}) ` : ""}${task.text}
+            ${task.due ? ` - Due: ${task.due}` : ""}
+          </span>
+          <div>
+            <button class="toggle-btn" onclick="toggleTask(${task.id})">✔️</button>
+            <button class="delete-btn" onclick="deleteTask(${task.id})">🗑️</button>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function toggleTask(id) {
+      const tasks = getTasks();
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        saveTasks(tasks);
+        renderTasks();
+        updateSummary();
+        if (task.completed) {
+          setScore(getScore() + 10);
+          document.getElementById("congratsMessage").style.display = "block";
+          setTimeout(() => {
+            document.getElementById("congratsMessage").style.display = "none";
+          }, 2000);
+        }
+      }
+    }
+
+    function deleteTask(id) {
+      const tasks = getTasks().filter(t => t.id !== id);
+      saveTasks(tasks);
+      renderTasks();
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const tasks = getTasks();
+      document.getElementById("done").textContent = tasks.filter(t => t.completed).length;
+      document.getElementById("pending").textContent = tasks.filter(t => !t.completed).length;
+      document.getElementById("score").textContent = getScore();
+    }
+
+    function resetAll() {
+      if (confirm("Are you sure you want to clear all tasks and reset the score?")) {
+        localStorage.removeItem("tasks");
+        localStorage.removeItem("score");
+        renderTasks();
+        updateSummary();
+      }
+    }
+
+    function checkReminders() {
+      const tasks = getTasks();
+      const now = new Date();
+      tasks.forEach(task => {
+        if (!task.completed && task.due) {
+          const dueDate = new Date(task.due);
+          const diff = dueDate - now;
+          if (diff > 0 && diff < 3600000) {
+            new Notification(`Reminder: "${task.text}" is due soon!`);
+          }
+        }
+      });
+    }
+
+    function loadAptitude() {
+      const today = new Date().toISOString().split("T")[0];
+      const aptitude = {
+        question: "What is 12 + 23?",
+        answer: "35"
+      };
+
+      const answered = localStorage.getItem("aptitudeDate") === today;
+      document.getElementById("aptitudeQuestion").textContent = answered
+        ? "✅ You've completed today's aptitude question!"
+        : aptitude.question;
+
+      if (answered) {
+        document.getElementById("aptitudeAnswer").style.display = "none";
+        document.querySelector(".aptitude button").style.display = "none";
+      }
+    }
+
+    function checkAptitude() {
+      const answer = document.getElementById("aptitudeAnswer").value.trim();
+      const correct = "35";
+
+      if (answer === correct) {
+        document.getElementById("aptitudeResult").textContent = "✅ Correct! +20 points";
+        setScore(getScore() + 20);
+      } else {
+        document.getElementById("aptitudeResult").textContent = "❌ Wrong. Correct answer is 35.";
+      }
+
+      document.getElementById("aptitudeAnswer").disabled = true;
+      document.querySelector(".aptitude button").disabled = true;
+      localStorage.setItem("aptitudeDate", new Date().toISOString().split("T")[0]);
+    }
+  </script>
+</body>
+</html>
